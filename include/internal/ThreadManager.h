@@ -39,10 +39,10 @@ namespace Screen_Capture {
 
             std::shared_ptr<Timer> timer;
             if constexpr(sizeof...(args) == 1) {
-                timer = std::atomic_load(&data->WindowCaptureData.MouseTimer);
+                timer = data->WindowCaptureData.MouseTimer;
             }
             else {
-                timer = std::atomic_load(&data->ScreenCaptureData.MouseTimer);
+                timer = data->ScreenCaptureData.MouseTimer;
             }
 
             timer->start();

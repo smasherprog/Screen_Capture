@@ -1,6 +1,7 @@
 #include "internal/ThreadManager.h"
 #include <assert.h>
 #include <algorithm>
+#include <fstream>
 
 SL::Screen_Capture::ThreadManager::ThreadManager()
 {
@@ -9,7 +10,11 @@ SL::Screen_Capture::ThreadManager::~ThreadManager()
 {
     Join();
 }
-
+inline std::ostream &operator<<(std::ostream &os, const SL::Screen_Capture::Monitor &p)
+{
+    return os << "Id=" << p.Id << " Index=" << p.Index << " Height=" << p.Height << " Width=" << p.Width << " OffsetX=" << p.OffsetX
+              << " OffsetY=" << p.OffsetY << " Name=" << p.Name;
+}
 void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>& data)
 {
     assert(m_ThreadHandles.empty());
@@ -17,7 +22,7 @@ void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>&
     if (data->ScreenCaptureData.getThingsToWatch) {
         auto monitors = data->ScreenCaptureData.getThingsToWatch();
         auto mons = GetMonitors();
-        for ([[maybe_unused]] auto &m : monitors) {
+        for (auto &m : monitors) {
             assert(isMonitorInsideBounds(mons, m));
         }
 

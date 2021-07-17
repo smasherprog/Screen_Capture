@@ -1,4 +1,4 @@
-project(screen_capture_example)
+project(screen_capture_example_cpp)
 
 if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
@@ -39,9 +39,25 @@ else()
 	)
 endif()
 
-add_executable(${PROJECT_NAME}  
+include_directories(
+	../include 
+) 
+
+add_executable(${PROJECT_NAME}_static
 	lodepng.cpp
 	Screen_Capture_Example.cpp
 )
-target_link_libraries(${PROJECT_NAME} screen_capture_lite ${${PROJECT_NAME}_PLATFORM_LIBS}) 
-add_test (NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_static screen_capture_lite_static ${${PROJECT_NAME}_PLATFORM_LIBS}) 
+add_test (NAME ${PROJECT_NAME}_static COMMAND ${PROJECT_NAME}_static)
+
+add_executable(${PROJECT_NAME}_shared  
+	lodepng.cpp
+	Screen_Capture_Example.cpp
+)
+
+install (TARGETS ${PROJECT_NAME}_static ${PROJECT_NAME}_shared screen_capture_lite_shared
+	RUNTIME DESTINATION Examples
+) 
+  
+target_link_libraries(${PROJECT_NAME}_shared screen_capture_lite_shared ${${PROJECT_NAME}_PLATFORM_LIBS}) 
+add_test (NAME ${PROJECT_NAME}_shared COMMAND ${PROJECT_NAME}_shared)

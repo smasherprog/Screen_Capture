@@ -32,7 +32,7 @@ namespace Screen_Capture {
     const ImageRect &Rect(const Image &img);
 
     template <typename F, typename M, typename W> struct CaptureData {
-        std::shared_ptr<Timer> FrameTimer;
+        std::atomic<std::shared_ptr<Timer>> FrameTimer;
         F OnNewFrame;
         F OnFrameChanged;
         std::shared_ptr<Timer> MouseTimer;
@@ -66,8 +66,7 @@ namespace Screen_Capture {
 
     enum DUPL_RETURN { DUPL_RETURN_SUCCESS = 0, DUPL_RETURN_ERROR_EXPECTED = 1, DUPL_RETURN_ERROR_UNEXPECTED = 2 };
     Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string &n, float scale);
-    Monitor CreateMonitor(int index, int id, int adapter, int h, int w, int ox, int oy, const std::string &n, float scale);
-    SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
+    Monitor CreateMonitor(int index, int id, int adapter, int h, int w, int ox, int oy, const std::string &n, float scale); 
     SC_LITE_EXTERN Image CreateImage(const ImageRect &imgrect, int rowpadding, const ImageBGRA *data);
     // this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
     // void Copy(const Image& dst, const Image& src);

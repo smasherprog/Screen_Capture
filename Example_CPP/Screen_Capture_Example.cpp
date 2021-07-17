@@ -68,7 +68,7 @@ void createframegrabber()
             return mons;
         })
             ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
+                //std::cout << "Difference detected!  " << img.Bounds << std::endl;
                 // Uncomment the below code to write the image to disk for debugging
                 /*
                         auto r = realcounter.fetch_add(1);

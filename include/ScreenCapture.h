@@ -1,4 +1,23 @@
 #pragma once
+
+#if defined(WINDOWS) || defined(WIN32)
+#if defined(SC_LITE_DLL)
+#define SC_LITE_C_EXTERN extern "C" __declspec(dllexport)
+#define SC_LITE_EXTERN __declspec(dllexport)
+#else
+#define SC_LITE_C_EXTERN
+#define SC_LITE_EXTERN
+#endif
+#else
+#if defined(SC_LITE_DLL)
+#define SC_LITE_C_EXTERN extern "C"
+#define SC_LITE_EXTERN
+#else
+#define SC_LITE_C_EXTERN
+#define SC_LITE_EXTERN
+#endif
+#endif
+
 #include <assert.h>
 #include <chrono>
 #include <cstring>
@@ -8,18 +27,12 @@
 #include <thread>
 #include <vector>
 
-#if defined(WINDOWS) || defined(WIN32)
-#if defined(SC_LITE_DLL)
-#define SC_LITE_EXTERN __declspec(dllexport)
-#else
-#define SC_LITE_EXTERN
-#endif
-#else
-#define SC_LITE_EXTERN
-#endif
-
 namespace SL {
 namespace Screen_Capture {
+    namespace C_API {
+        class IScreenCaptureManagerWrapper;
+        class ICaptureConfigurationScreenCaptureCallbackWrapper;
+    }; // namespace C_API
     struct SC_LITE_EXTERN Point {
         int x;
         int y;
@@ -139,10 +152,18 @@ namespace Screen_Capture {
         std::chrono::microseconds duration() const { return Duration; }
     };
     // will return all attached monitors
+
     SC_LITE_EXTERN std::vector<Monitor> GetMonitors();
     // will return all windows
     SC_LITE_EXTERN std::vector<Window> GetWindows();
-
+    namespace C_API {
+        //GetWindows and GetMonitors expect a pre allocated buffer with the size as the second input parameter. 
+        //The output of these functions is the actual total number of elements that the library had to return. So, applications should use this value in determininng how to preallocate data.
+        SC_LITE_C_EXTERN int GetWindows(Window *windows, int windows_size);
+        SC_LITE_C_EXTERN int GetMonitors(Monitor *monitors, int monitors_size);
+        SC_LITE_C_EXTERN bool isMonitorInsideBounds(const Monitor *monitors, const int monitorsize, const Monitor *monitor);
+    }; // namespace C_API
+    SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image *img, const MousePoint &mousepoint)> MouseCallback;
@@ -188,9 +209,27 @@ namespace Screen_Capture {
         virtual std::shared_ptr<IScreenCaptureManager> start_capturing() = 0;
     };
 
+    namespace C_API {
+        typedef int (*C_API_ScreenCaptureCallback)(const Image &img, const Monitor &monitor); 
+        SC_LITE_C_EXTERN void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN void onFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *start_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
+        SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr);
+
+        SC_LITE_C_EXTERN void setFrameChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds);
+        SC_LITE_C_EXTERN void pause(IScreenCaptureManagerWrapper *ptr);
+        SC_LITE_C_EXTERN bool isPaused(IScreenCaptureManagerWrapper *ptr);
+        SC_LITE_C_EXTERN void resume(IScreenCaptureManagerWrapper *ptr);
+    }; // namespace C_API
+
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want
     // to be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
+    namespace C_API { 
+        typedef int (*C_API_MonitorCallback)(Monitor *monitorbuffer, int monitorbuffersize); 
+        SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(C_API_MonitorCallback monitorstocapture);
+        SC_LITE_C_EXTERN void FreeCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
+    }; // namespace C_API
     // the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to
     // be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback &windowstocapture);
